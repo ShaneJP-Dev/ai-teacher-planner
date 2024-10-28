@@ -24,7 +24,7 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
     const generateQuiz = async () => {
         setIsGenerating(true);
         try {
-            const response = await fetch('/api/generate', {
+            const response = await fetch('/api/generatequiz', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
                 onQuizGenerated(data.output);
             } else if (data.error) {
                 console.error('Error generating quiz:', data.error);
-                // Handle the error in thhe UI, e.g., show an error message to the user
+                // Handle the error in the UI, e.g., show an error message to the user
             }
         } catch (error) {
             console.error('Failed to generate quiz:', error);

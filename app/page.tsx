@@ -1,10 +1,9 @@
 import React from 'react';
-import { Sidebar } from '@/components/layout/Sidebar';
 import { DashboardHeader } from '@/components/header/DashboardHeader';
 import { StatsCard } from '@/components/stats/StatsCard';
 import { AssignmentList } from '@/components/assignments/AssignmentList';
 import { RecommendationList } from '@/components/recommendations/RecommendationList';
-import { AIChat } from '@/components/ai-chat/AIChat';
+import { AIChat } from '@/components/ai-components/AIChat';
 
 const DashboardPage = () => {
   const userData = {
@@ -31,23 +30,19 @@ const DashboardPage = () => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar userName={userData.name} userEmail={userData.email} />
+    <>
+      <DashboardHeader userName={userData.name} />
       
-      <div className="flex-1 p-8">
-        <DashboardHeader userName={userData.name} />
-        
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {statsData.map((stat, index) => (
-            <StatsCard key={index} {...stat} />
-          ))}
-        </div>
-
-        <AssignmentList assignments={assignments} />
-        <RecommendationList recommendations={recommendations} />
-        <AIChat />
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        {statsData.map((stat, index) => (
+          <StatsCard key={index} {...stat} />
+        ))}
       </div>
-    </div>
+
+      <AssignmentList assignments={assignments} />
+      <RecommendationList recommendations={recommendations} />
+      <AIChat />
+    </>
   );
 };
 

@@ -1,36 +1,23 @@
 "use client"
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button"; // Adjust the import based on your component library
-import { Card, CardContent } from "@/components/ui/card"; // Adjust the import based on your component library
 
-interface Lesson {
-  id: number;
-  title: string;
-  type: "lesson" | "quiz";
-  date: string;
-  content: string;
-}
+import { useState } from "react";
+import { Lesson } from "@/types";
+import { AILessonGenerator } from "@/components/ai-components/AILessonPlan";
 
-const initialLessons: Lesson[] = [
-  { id: 1, title: "Math - Algebra Basics", type: "lesson", date: "2024-01-05", content: "Introduction to variables and equations" },
-  { id: 2, title: "Math - Algebra Quiz 1", type: "quiz", date: "2024-01-10", content: "Basic algebra quiz with 10 questions" },
-  { id: 3, title: "Science - Intro to Biology", type: "lesson", date: "2024-01-12", content: "Understanding cells and DNA" },
-];
-
-const LessonsPage: React.FC = () => {
-  const [lessons, setLessons] = useState<Lesson[]>(initialLessons);
+export function LessonPage() {
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [newLessonTitle, setNewLessonTitle] = useState("");
   const [newLessonContent, setNewLessonContent] = useState("");
   const [newLessonType, setNewLessonType] = useState<"lesson" | "quiz">("lesson");
-  
+
   const addLesson = () => {
     if (newLessonTitle && newLessonContent) {
       const newLesson: Lesson = {
         id: lessons.length + 1,
         title: newLessonTitle,
         type: newLessonType,
-        date: new Date().toISOString().split("T")[0], // Set to current date
+        date: new Date().toISOString().split("T")[0],
         content: newLessonContent,
       };
       setLessons([...lessons, newLesson]);
@@ -39,52 +26,69 @@ const LessonsPage: React.FC = () => {
     }
   };
 
+  const handleGeneratedLessons = (generatedLessons: Lesson[]) => {
+    setLessons((prev) => [...prev, ...generatedLessons]);
+  };
+
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Lessons</h2>
-      <div className="space-y-4">
-        {lessons.map((lesson) => (
-          <Card key={lesson.id} className="mb-4">
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="font-semibold">{lesson.title}</h3>
-                  <p className="text-sm text-gray-600">{lesson.content}</p>
-                </div>
-                <span className="text-xs text-gray-500">{lesson.date}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Lesson Planning Page</h1>
+      
+      <div className="mb-8">
+        <AILessonGenerator onLessonsGenerated={handleGeneratedLessons} />
       </div>
-      <div className="mt-6">
-        <input
-          type="text"
-          placeholder="Lesson Title"
-          value={newLessonTitle}
-          onChange={(e) => setNewLessonTitle(e.target.value)}
-          className="border p-2 mb-2 w-full"
-        />
-        <textarea
-          placeholder="Lesson Content"
-          value={newLessonContent}
-          onChange={(e) => setNewLessonContent(e.target.value)}
-          className="border p-2 mb-2 w-full"
-        />
-        <select
-          value={newLessonType}
-          onChange={(e) => setNewLessonType(e.target.value as "lesson" | "quiz")}
-          className="border p-2 mb-2 w-full"
+
+      {/* Add New Lesson Form */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">Add New Lesson</h2>
+        <form 
+          onSubmit={(e) => { e.preventDefault(); addLesson(); }}
+          className="space-y-4"
         >
-          <option value="lesson">Lesson</option>
-          <option value="quiz">Quiz</option>
-        </select>
-        <Button variant="default" size="lg" onClick={addLesson}>
-          Add New Lesson
-        </Button>
+          <input
+            type="text"
+            value={newLessonTitle}
+            onChange={(e) => setNewLessonTitle(e.target.value)}
+            placeholder="Lesson Title"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <textarea
+            value={newLessonContent}
+            onChange={(e) => setNewLessonContent(e.target.value)}
+            placeholder="Lesson Content"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32"
+          />
+          <select
+            value={newLessonType}
+            onChange={(e) => setNewLessonType(e.target.value as "lesson" | "quiz")}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="lesson">Lesson</option>
+            <option value="quiz">Quiz</option>
+          </select>
+          <button 
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium"
+          >
+            Add Lesson
+          </button>
+        </form>
+      </div>
+
+      {/* Display All Lessons */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800"> All Lessons</h2>
+        {lessons.map((lesson) => (
+          <div key={lesson.id} className="mb-4">
+            <h3 className="text-lg font-bold">{lesson.title}</h3>
+            <p>Type: {lesson.type}</p>
+            <p>Date: {lesson.date}</p>
+            <p>{lesson.content}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
-};
+}
 
-export default LessonsPage;
+export default LessonPage;
