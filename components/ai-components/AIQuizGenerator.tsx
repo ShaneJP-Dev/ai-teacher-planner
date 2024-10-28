@@ -58,8 +58,8 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
     };
 
     return (
-        <Card className="w-full max-w-2xl mx-auto">
-            <CardContent className="p-6">
+        <Card className="w-full max-w-2xl mx-auto flex flex-col h-[calc(100vh-4rem)]">
+            <CardContent className="p-6 flex-grow overflow-y-auto">
                 <h2 className="text-2xl font-bold mb-4">AI Quiz Generator</h2>
                 <div className="space-y-4">
                     <div>
