@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BrainCircuitIcon, SendIcon } from "lucide-react";
-import { generateTermPlans } from '@/utils/generateTermPlans'; // Create this utility for AI generation
-import { DndProvider } from "react-dnd"; // Drag and Drop provider
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface Message {
   type: 'user' | 'ai';
@@ -15,7 +14,6 @@ interface Message {
 }
 
 export const AIChat: React.FC = () => {
-  const [output, setOutput] = useState('This is a nextjs project');
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -24,7 +22,7 @@ export const AIChat: React.FC = () => {
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
-  const [generatedPlans, setGeneratedPlans] = useState<any[]>([]); // Holds generated lesson plans and quizzes
+  const [termPlanner, setTermPlanner] = useState<string | null>(null);
 
   const generateText = async (prompt: string) => {
     try {
@@ -51,17 +49,53 @@ export const AIChat: React.FC = () => {
 
   const handleSendMessage = async () => {
     if (inputMessage.trim()) {
-      // Add the user message to the chat
       setMessages([...messages, { type: 'user', content: inputMessage }]);
       const userRequest = inputMessage.toLowerCase();
 
-      // Generate AI response based on the user input
       const aiResponse = await generateText(userRequest);
-      setMessages(prev => [...prev, { type: 'ai', content: aiResponse }]);
 
-      // Clear the input field
+      setMessages(prev => [
+        ...prev,
+        { type: 'ai', content: aiResponse }
+      ]);
+
+      // If AI response is a term planner, store it for PDF generation
+      if (userRequest.includes("term planner")) {
+        setTermPlanner(aiResponse);
+      }
+
       setInputMessage('');
     }
+  };
+
+  const generatePDF = () => {
+    if (!termPlanner) return;
+
+    const doc = new jsPDF();
+    doc.text("AI-Generated Term Planner", 14, 20);
+
+    // Parse the term planner response into table data
+    const rows = termPlanner
+      .split('\n')
+      .map(line => line.split('|').map(cell => cell.trim())); // Assuming AI output uses '|' as a column separator
+
+    // Create a header row for the table (adjust according to your planner content)
+    const headers = rows.shift(); // Use the first row as headers if formatted accordingly
+
+    doc.autoTable({
+      head: [headers],
+      body: rows,
+      startY: 30,
+      theme: 'grid',
+      styles: {
+        fontSize: 10,
+        cellPadding: 3,
+        overflow: 'linebreak',
+        valign: 'middle',
+      }
+    });
+
+    doc.save("Term_Planner.pdf");
   };
 
   return (
@@ -96,8 +130,8 @@ export const AIChat: React.FC = () => {
               >
                 <div
                   className={`max-w-[80%] p-3 rounded-lg ${message.type === 'user'
-                      ? 'bg-purple-500 text-white'
-                      : 'bg-white border border-gray-200'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-white border border-gray-200'
                     }`}
                 >
                   {message.content}
@@ -117,6 +151,15 @@ export const AIChat: React.FC = () => {
               <SendIcon className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* PDF Generate Button */}
+          {termPlanner && (
+            <div className="mt-4 flex justify-center">
+              <Button onClick={generatePDF} variant="default">
+                Download Term Planner as PDF
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
