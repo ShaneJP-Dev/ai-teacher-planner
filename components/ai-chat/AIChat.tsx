@@ -15,6 +15,7 @@ interface Message {
 }
 
 export const AIChat: React.FC = () => {
+  const [output, setOutput] = useState('This is a nextjs project');
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -25,23 +26,40 @@ export const AIChat: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [generatedPlans, setGeneratedPlans] = useState<any[]>([]); // Holds generated lesson plans and quizzes
 
+  const generateText = async (prompt: string) => {
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json'
+        },
+        body: JSON.stringify({ body: prompt })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return data.output;
+      } else {
+        return data.error || 'Error generating response';
+      }
+    } catch (error) {
+      console.error(error);
+      return 'An error occurred while generating the response.';
+    }
+  };
+
   const handleSendMessage = async () => {
     if (inputMessage.trim()) {
+      // Add the user message to the chat
       setMessages([...messages, { type: 'user', content: inputMessage }]);
       const userRequest = inputMessage.toLowerCase();
 
-      // Simulate AI response
-      setTimeout(async () => {
-        let aiResponse = "I'll help you create that.";
-        if (userRequest.includes("lesson plan") || userRequest.includes("quiz")) {
-          const plans = await generateTermPlans(); // AI generation function
-          setGeneratedPlans(plans); // Populate the lesson page with generated content
-          aiResponse = "Your term's lesson plans and quizzes have been generated. You can now modify them on the lesson page!";
-        }
+      // Generate AI response based on the user input
+      const aiResponse = await generateText(userRequest);
+      setMessages(prev => [...prev, { type: 'ai', content: aiResponse }]);
 
-        setMessages(prev => [...prev, { type: 'ai', content: aiResponse }]);
-      }, 1000);
-
+      // Clear the input field
       setInputMessage('');
     }
   };
@@ -77,11 +95,10 @@ export const AIChat: React.FC = () => {
                 className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] p-3 rounded-lg ${
-                    message.type === 'user'
+                  className={`max-w-[80%] p-3 rounded-lg ${message.type === 'user'
                       ? 'bg-purple-500 text-white'
                       : 'bg-white border border-gray-200'
-                  }`}
+                    }`}
                 >
                   {message.content}
                 </div>
