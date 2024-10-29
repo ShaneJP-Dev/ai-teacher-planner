@@ -47,7 +47,7 @@ const DraggableLesson: React.FC<DraggableLessonProps> = ({ lesson, onLessonMove,
         isDragging ? 'opacity-50' : 'opacity-100'
       } ${
         isNewlyAdded ? 'border-2 border-green-500 animate-pulse' : ''
-      } p-4 rounded-lg bg-white shadow-lg select-none w-full max-w-xs`}
+      } p-4 rounded-lg bg-white shadow-lg select-none w-full max-w-md min-h-[100px] m-2`}
       data-testid={`draggable-lesson-${lesson.id}`}
     >
       <strong className="block text-sm font-semibold">{lesson.title}</strong>

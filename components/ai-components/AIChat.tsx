@@ -72,15 +72,14 @@ export const AIChat: React.FC = () => {
     if (!termPlanner) return;
 
     const doc = new jsPDF();
+    doc.setFontSize(16);
     doc.text("AI-Generated Term Planner", 14, 20);
 
-    // Parse the term planner response into table data
     const rows = termPlanner
       .split('\n')
-      .map(line => line.split('|').map(cell => cell.trim())); // Assuming AI output uses '|' as a column separator
+      .map(line => line.split('|').map(cell => cell.trim())); 
 
-    // Create a header row for the table (adjust according to your planner content)
-    const headers = rows.shift(); // Use the first row as headers if formatted accordingly
+    const headers = rows.shift();
 
     doc.autoTable({
       head: [headers],
@@ -92,7 +91,12 @@ export const AIChat: React.FC = () => {
         cellPadding: 3,
         overflow: 'linebreak',
         valign: 'middle',
-      }
+      },
+      headStyles: {
+        fillColor: '#1f2937',
+        textColor: '#ffffff',
+        fontStyle: 'bold',
+      },
     });
 
     doc.save("Term_Planner.pdf");
@@ -134,13 +138,21 @@ export const AIChat: React.FC = () => {
                     : 'bg-white border border-gray-200'
                     }`}
                 >
-                  {message.content}
+                  {message.content.split('\n').map((line, i) => {
+                    if (line.startsWith('**')) {
+                      return <p key={i} className="font-bold text-lg">{line.replace(/\*\*/g, '')}</p>;
+                    } else if (line.startsWith('*')) {
+                      return <p key={i} className="italic ml-4">{line.replace(/\*/g, '')}</p>;
+                    } else {
+                      return <p key={i} className="ml-6">{line}</p>;
+                    }
+                  })}
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-2">
             <Input
               placeholder="Type your message..."
               value={inputMessage}
@@ -152,7 +164,6 @@ export const AIChat: React.FC = () => {
             </Button>
           </div>
 
-          {/* PDF Generate Button */}
           {termPlanner && (
             <div className="mt-4 flex justify-center">
               <Button onClick={generatePDF} variant="default">
