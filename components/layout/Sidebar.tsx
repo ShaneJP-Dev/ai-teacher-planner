@@ -69,10 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ userEmail, userName }) => {
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:static
-        inset-y-0 left-0
-        w-64 bg-white border-r
-        flex flex-col
+        fixed inset-y-0 left-0 w-64 bg-white border-r h-screen z-50
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         z-50 h-screen

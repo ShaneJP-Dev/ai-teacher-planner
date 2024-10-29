@@ -38,7 +38,7 @@ export default function RootLayout({
       >
         <div className="flex min-h-screen bg-gray-50">
           <Sidebar userName={userData.name} userEmail={userData.email} />
-          <main className="flex-1 p-8">
+          <main className="flex-1 ml-64 h-screen overflow-y-auto">
             {children}
           </main>
         </div>
