@@ -47,23 +47,40 @@ export const AIChat: React.FC = () => {
     }
   };
 
+  const formatPlannerResponse = (response: string) => {
+    const lines = response.split('\n');
+    let formattedResponse = '';
+    let isHeading = true;
+
+    lines.forEach(line => {
+      if (line.trim()) {
+        if (line.includes('**')) {
+          formattedResponse += `\n<strong>${line.replace(/\*\*/g, '')}</strong>\n`;
+        } else if (line.startsWith('*')) {
+          formattedResponse += `• ${line.replace(/\*/g, '').trim()}\n`;
+        } else {
+          formattedResponse += `${line}\n`;
+        }
+      }
+    });
+
+    return formattedResponse;
+  };
+
   const handleSendMessage = async () => {
     if (inputMessage.trim()) {
       setMessages([...messages, { type: 'user', content: inputMessage }]);
       const userRequest = inputMessage.toLowerCase();
 
-      const aiResponse = await generateText(userRequest);
+      let aiResponse = await generateText(userRequest);
 
-      setMessages(prev => [
-        ...prev,
-        { type: 'ai', content: aiResponse }
-      ]);
-
-      // If AI response is a term planner, store it for PDF generation
+      // Format AI response if it's a term planner
       if (userRequest.includes("term planner")) {
+        aiResponse = formatPlannerResponse(aiResponse);
         setTermPlanner(aiResponse);
       }
 
+      setMessages(prev => [...prev, { type: 'ai', content: aiResponse }]);
       setInputMessage('');
     }
   };
@@ -74,25 +91,28 @@ export const AIChat: React.FC = () => {
     const doc = new jsPDF();
     doc.text("AI-Generated Term Planner", 14, 20);
 
-    // Parse the term planner response into table data
-    const rows = termPlanner
-      .split('\n')
-      .map(line => line.split('|').map(cell => cell.trim())); // Assuming AI output uses '|' as a column separator
+    const lines = termPlanner.split('\n');
+    let currentY = 30;
+    const lineHeight = 10;
+    const pageHeight = doc.internal.pageSize.height;
 
-    // Create a header row for the table (adjust according to your planner content)
-    const headers = rows.shift(); // Use the first row as headers if formatted accordingly
-
-    doc.autoTable({
-      head: [headers],
-      body: rows,
-      startY: 30,
-      theme: 'grid',
-      styles: {
-        fontSize: 10,
-        cellPadding: 3,
-        overflow: 'linebreak',
-        valign: 'middle',
+    lines.forEach(line => {
+      // Check if we need to add a new page
+      if (currentY + lineHeight > pageHeight - 20) {  // leave some margin at the bottom
+        doc.addPage();
+        currentY = 20;  // Reset Y position for new page
       }
+
+      // Check if it's a heading
+      if (line.startsWith('<strong>')) {
+        doc.setFont("helvetica", "bold");
+        doc.text(line.replace(/<[^>]+>/g, ''), 14, currentY);
+        doc.setFont("helvetica", "normal");
+      } else {
+        doc.text(line, 14, currentY);
+      }
+
+      currentY += lineHeight;
     });
 
     doc.save("Term_Planner.pdf");
@@ -133,9 +153,8 @@ export const AIChat: React.FC = () => {
                     ? 'bg-purple-500 text-white'
                     : 'bg-white border border-gray-200'
                     }`}
-                >
-                  {message.content}
-                </div>
+                  dangerouslySetInnerHTML={{ __html: message.content }}
+                />
               </div>
             ))}
           </div>
