@@ -117,7 +117,7 @@ export async function POST(req: Request) {
             title: title || "Untitled Lesson",
             content: content || "No content provided",
             type: type?.toLowerCase() === "quiz" ? "quiz" : "lesson",
-            date: lessonDate.toISOString().split('T')[0],
+            date: lessonDate, // Keep it as a Date object
             week,
             day
           } as Lesson;

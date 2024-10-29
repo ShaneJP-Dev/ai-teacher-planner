@@ -15,7 +15,6 @@ interface DropResult {
 }
 
 const DraggableLesson: React.FC<DraggableLessonProps> = ({ lesson, onLessonMove, isNewlyAdded }) => {
-  // Create a ref with fallback for type safety
   const ref = useRef<HTMLDivElement | null>(null);
 
   const [{ isDragging }, drag] = useDrag({
@@ -37,18 +36,19 @@ const DraggableLesson: React.FC<DraggableLessonProps> = ({ lesson, onLessonMove,
     }),
   });
 
-  // Connect the drag ref
   drag(ref);
 
   return (
     <div
       ref={ref}
-      role="button"  // Accessibility role for draggable
-      aria-grabbed={isDragging}  // Accessibility attribute for dragging state
-      className={`cursor-move ${isDragging ? 'opacity-50' : 'opacity-100'} ${
+      role="button"
+      aria-grabbed={isDragging}
+      className={`cursor-move transition-opacity duration-200 ${
+        isDragging ? 'opacity-50' : 'opacity-100'
+      } ${
         isNewlyAdded ? 'border-2 border-green-500 animate-pulse' : ''
-      } p-2 rounded-md bg-white shadow-md select-none`}
-      data-testid={`draggable-lesson-${lesson.id}`}  // Useful for testing
+      } p-4 rounded-lg bg-white shadow-lg select-none w-full max-w-xs`}
+      data-testid={`draggable-lesson-${lesson.id}`}
     >
       <strong className="block text-sm font-semibold">{lesson.title}</strong>
       <p className="text-xs text-gray-600 truncate">{lesson.content}</p>
