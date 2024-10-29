@@ -94,7 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ userEmail, userName }) => {
             <div className="space-y-1">
               {navItems.map((item, index) => (
                 <React.Fragment key={index}>
-                  {index === 2 && <div className="my-2 border-t border-gray-200" />}
+                  {index === 2 && <div className="my-2 border-gray-200" />}
                   <Link 
                     href={item.href} 
                     className="block"
