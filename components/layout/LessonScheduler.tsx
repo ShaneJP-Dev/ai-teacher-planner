@@ -16,8 +16,6 @@ interface LessonSchedulerProps {
   newlyAddedLessonIds: number[];
 }
 
-
-
 interface EventWrapperProps {
   event: CalendarEvent;
   isNewlyAdded: boolean;
@@ -63,7 +61,7 @@ export const LessonScheduler: React.FC<LessonSchedulerProps> = ({
       start: new Date(start),
       end: new Date(end),
     };
-  
+
     // Convert CalendarEvent to Lesson type
     const lessonEvent: Lesson = {
       id: event.id,
@@ -73,19 +71,17 @@ export const LessonScheduler: React.FC<LessonSchedulerProps> = ({
       date: new Date(start), // Use start date directly instead of event.date
       endDate: new Date(end).toISOString(),
     };
-  
+
     onLessonMove(lessonEvent, new Date(start), new Date(end));
-  
+
     setEvents((prevEvents) =>
-      prevEvents.map((ev) =>
-        ev.id === updatedEvent.id ? updatedEvent : ev
-      )
+      prevEvents.map((ev) => (ev.id === updatedEvent.id ? updatedEvent : ev))
     );
   };
 
   const CustomEventComponent = React.useCallback(
     ({ event }: { event: CalendarEvent }) => (
-      <EventWrapper 
+      <EventWrapper
         event={event}
         isNewlyAdded={newlyAddedLessonIds.includes(event.id)}
       />
@@ -102,7 +98,7 @@ export const LessonScheduler: React.FC<LessonSchedulerProps> = ({
         endAccessor={(event: any) => event.end}
         className="h-full"
         components={{
-          event: CustomEventComponent as any
+          event: CustomEventComponent as any,
         }}
         defaultView="week"
         views={["week", "day"]}

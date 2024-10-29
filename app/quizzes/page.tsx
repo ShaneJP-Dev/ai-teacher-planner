@@ -5,7 +5,7 @@ import { QuizGenerator } from "@/components/ai-components/AIQuizGenerator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PrinterIcon, MonitorIcon, PlusIcon } from "lucide-react";
+import { MonitorIcon, PlusIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -52,7 +52,6 @@ const QuizzesPage: React.FC = () => {
   const [score, setScore] = useState(0);
   const [activeTab, setActiveTab] = useState("Mathematics");
   const [isQuizGeneratorOpen, setIsQuizGeneratorOpen] = useState(false);
-  const [quizType, setQuizType] = useState<"printable" | "online" | null>(null);
 
   const handleQuizGenerated = (quiz: Quiz) => {
     setCurrentQuiz(quiz);
@@ -92,36 +91,7 @@ const QuizzesPage: React.FC = () => {
       {!currentQuiz ? (
         <>
           {/* Quiz Generation Options */}
-          <div className="grid md:grid-cols-2 gap-4 mb-8">
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-xl font-semibold mb-4">
-                  Generate Printable Quiz
-                </h2>
-                <p className="text-gray-600 mb-4">
-                  Create a quiz with a corresponding memo for printing.
-                </p>
-                <Dialog
-                  open={isQuizGeneratorOpen && quizType === "printable"}
-                  onOpenChange={setIsQuizGeneratorOpen}
-                >
-                  <DialogTrigger asChild>
-                    <Button
-                      className="w-full"
-                      onClick={() => setQuizType("printable")}
-                    >
-                      <PrinterIcon className="mr-2 h-4 w-4" />
-                      Generate Printable Quiz
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogTitle>Generate Printable Quiz</DialogTitle>
-                    <QuizGenerator onQuizGenerated={handleQuizGenerated} />
-                  </DialogContent>
-                </Dialog>
-              </CardContent>
-            </Card>
-
+          <div className="grid md:grid-cols-1 gap-4 mb-8">
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-xl font-semibold mb-4">
@@ -131,13 +101,13 @@ const QuizzesPage: React.FC = () => {
                   Design an interactive online quiz experience.
                 </p>
                 <Dialog
-                  open={isQuizGeneratorOpen && quizType === "online"}
+                  open={isQuizGeneratorOpen}
                   onOpenChange={setIsQuizGeneratorOpen}
                 >
                   <DialogTrigger asChild>
                     <Button
                       className="w-full"
-                      onClick={() => setQuizType("online")}
+                      onClick={() => setIsQuizGeneratorOpen(true)}
                     >
                       <MonitorIcon className="mr-2 h-4 w-4" />
                       Create Online Quiz
