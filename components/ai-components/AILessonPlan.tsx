@@ -1,6 +1,7 @@
-// components/AILessonGenerator.tsx
-import { useState } from "react";
+import React, { useState } from "react";
 import { Lesson, LessonPlannerInput, TermInfo } from "@/types";
+import { LessonScheduler } from "../layout/LessonScheduler";
+import Loader from "../loader/Loader"; // Import Loader component
 
 interface AILessonGeneratorProps {
   onLessonsGenerated: (lessons: Lesson[], termInfo: TermInfo) => void;
@@ -16,6 +17,10 @@ export function AILessonGenerator({
     term: "",
   });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedLessons, setGeneratedLessons] = useState<Lesson[]>([]);
+  const [termInfo, setTermInfo] = useState<TermInfo | null>(null);
+  const [newlyAddedLessonIds, setNewlyAddedLessonIds] = useState<number[]>([]);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -37,7 +42,6 @@ export function AILessonGenerator({
 
     setIsGenerating(true);
     try {
-      // Ensure the term is just the number
       const termNumber = plannerInput.term.replace(/[^1-4]/g, "");
 
       const response = await fetch("/api/lessongenerate", {
@@ -57,10 +61,13 @@ export function AILessonGenerator({
       }
 
       const data = await response.json();
+      setGeneratedLessons(data.lessons);
+      setTermInfo(data.termInfo);
+      setNewlyAddedLessonIds(data.lessons.map((lesson: Lesson) => lesson.id));
       onLessonsGenerated(data.lessons, data.termInfo);
+      setShowCalendar(true);
     } catch (error) {
       console.error("Failed to generate lesson plan:", error);
-      // Type check the error before accessing message property
       if (error instanceof Error) {
         alert(error.message);
       } else {
@@ -71,11 +78,23 @@ export function AILessonGenerator({
     }
   };
 
+  const handleLessonMove = (lesson: Lesson, start: Date, end: Date) => {
+    const updatedLesson: Lesson = {
+      ...lesson,
+      date: start,
+      endDate: end.toISOString(),
+    };
+
+    const updatedLessons = generatedLessons.map((l) =>
+      l.id === updatedLesson.id ? updatedLesson : l
+    );
+
+    setGeneratedLessons(updatedLessons);
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">
-        AI Lesson Generator
-      </h2>
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">AI Lesson Generator</h2>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -111,27 +130,32 @@ export function AILessonGenerator({
           name="term"
           value={plannerInput.term}
           onChange={handleInputChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Select Term</option>
-          <option value="1">Term 1 (Mid-January to late March)</option>
-          <option value="2">Term 2 (Early April to late June)</option>
-          <option value="3">Term 3 (Mid-July to late September)</option>
-          <option value="4">Term 4 (Early October to mid-December)</option>
+          <option value="Term 1">Term 1</option>
+          <option value="Term 2">Term 2</option>
+          <option value="Term 3">Term 3</option>
+          <option value="Term 4">Term 4</option>
         </select>
         <button
           type="submit"
-          className={`w-full py-2 px-4 rounded-md text-white font-medium
-            ${
-              isGenerating
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 transition-colors"
-            }`}
           disabled={isGenerating}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md"
         >
-          {isGenerating ? "Generating..." : "Generate Lesson Plan"}
+          Generate Lesson Plan
         </button>
       </form>
+
+      {isGenerating ? (  // Show Loader while generating
+        <Loader />
+      ) : showCalendar && ( // Show Calendar if generation is complete
+        <LessonScheduler
+          lessons={generatedLessons}
+          onLessonMove={handleLessonMove}
+          newlyAddedLessonIds={newlyAddedLessonIds}
+        />
+      )}
     </div>
   );
 }

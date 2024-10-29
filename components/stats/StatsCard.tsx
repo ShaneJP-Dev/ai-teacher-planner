@@ -9,7 +9,7 @@ interface StatsCardProps {
 export const StatsCard: React.FC<StatsCardProps> = ({ value, label }) => {
   return (
     <Card>
-      <CardContent className="p-6">
+      <CardContent className="p-8">
         <div className="text-3xl font-bold">{value}</div>
         <div className="text-sm text-gray-500">{label}</div>
       </CardContent>
