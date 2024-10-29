@@ -1,6 +1,22 @@
-// app/api/generate/route.ts
+// app/api/generatequiz/route.ts
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
+
+function cleanJsonString(str: string): string {
+  // Remove any markdown formatting
+  str = str.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+  
+  // Remove any leading/trailing whitespace
+  str = str.trim();
+  
+  // Handle potential line breaks and formatting issues
+  str = str.replace(/[\r\n]+/g, ' ');
+  
+  // Remove any extra spaces between json elements
+  str = str.replace(/\s+/g, ' ');
+  
+  return str;
+}
 
 export async function POST(req: Request) {
     try {
@@ -14,71 +30,77 @@ export async function POST(req: Request) {
             Topic: ${data.topic}
             Number of questions: ${data.numberOfQuestions}
             Difficulty: ${data.difficulty}
-            Target Age Group: ${data.targetAge}
+            Target Grade: ${data.targetGrade}
             Learning Objectives: ${data.learningObjectives}
             Question Types: ${data.questionTypes.join(', ')}
 
-            For each question, include:
-            1. A clear question statement
-            2. Multiple answer options (for multiple choice)
-            3. The correct answer
-            4. A detailed explanation of why this is the correct answer
-            5. Related concepts or topics
-            6. Difficulty rating
-            7. Estimated time to answer
-
-            Please return the quiz as a clean JSON object without any markdown formatting or code blocks.
-            Use the following JSON format:
+            Important: Return ONLY a valid JSON object with no additional text or formatting.
+            The response must be a single JSON object with this exact structure:
             {
-                "title": "Quiz Title",
-                "subject": "Subject Name",
-                "topic": "Topic Name",
-                "difficulty": "Difficulty Level",
-                "targetAge": "Age Range",
-                "totalTime": "Estimated total time",
+                "title": string,
+                "subject": string,
+                "topic": string,
+                "difficulty": string,
+                "targetGrade": string,
+                "totalTime": string,
                 "questions": [
                     {
-                        "id": "unique_id",
-                        "type": "question_type",
-                        "question": "Question text",
-                        "options": ["option1", "option2", "option3", "option4"],
-                        "correctAnswer": "Correct option",
-                        "explanation": "Detailed explanation of the answer",
-                        "relatedConcepts": ["concept1", "concept2"],
-                        "difficultyRating": "Easy/Medium/Hard",
-                        "estimatedTime": "time in minutes"
+                        "id": number,
+                        "type": string,
+                        "question": string,
+                        "options": string[],
+                        "correctAnswer": string,
+                        "explanation": string,
+                        "relatedConcepts": string[],
+                        "difficultyRating": string,
+                        "estimatedTime": string
                     }
                 ]
             }`;
 
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-
-            // Get the response text
-            let output = await response.text();
-
-            // Clean the response by removing any markdown formatting
-            // This assumes the response might include code block markers for JSON
-            output = output.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
             try {
-                // Attempt to parse the cleaned output as JSON
-                const jsonData = JSON.parse(output);
-                
-                // If parsing is successful, return the JSON data
-                return NextResponse.json({ output: jsonData });
-            } catch (error) {
-                console.error("JSON parsing error:", error);
-                console.error("Raw output:", output);
-                return NextResponse.json({ error: "Invalid JSON response from AI", rawOutput: output }, { status: 500 });
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                let output = await response.text();
+
+                // Clean the response
+                output = cleanJsonString(output);
+
+                try {
+                    // Attempt to parse the cleaned output as JSON
+                    const jsonData = JSON.parse(output);
+                    
+                    // Validate the required structure
+                    if (!jsonData.title || !jsonData.questions || !Array.isArray(jsonData.questions)) {
+                        throw new Error("Invalid quiz structure");
+                    }
+
+                    return NextResponse.json({ output: jsonData });
+                } catch (parseError) {
+                    console.error("JSON parsing error:", parseError);
+                    console.error("Cleaned output:", output);
+                    return NextResponse.json({ 
+                        error: "Failed to parse quiz data", 
+                        details: parseError instanceof Error ? parseError.message : "Unknown parsing error",
+                        rawOutput: output 
+                    }, { status: 500 });
+                }
+            } catch (generationError) {
+                console.error("Generation error:", generationError);
+                return NextResponse.json({ 
+                    error: "Failed to generate quiz content",
+                    details: generationError instanceof Error ? generationError.message : "Unknown generation error"
+                }, { status: 500 });
             }
         }
         
-        // Handle other request types
         return NextResponse.json({ error: "Invalid request type" }, { status: 400 });
         
     } catch (error) {
-        console.error(error);
-        return NextResponse.json({ error: "Failed to generate content" }, { status: 500 });
+        console.error("Server error:", error);
+        return NextResponse.json({ 
+            error: "Server error",
+            details: error instanceof Error ? error.message : "Unknown server error"
+        }, { status: 500 });
     }
 }
