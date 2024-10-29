@@ -17,45 +17,50 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
     const [numberOfQuestions, setNumberOfQuestions] = useState(5);
     const [difficulty, setDifficulty] = useState('medium');
     const [isGenerating, setIsGenerating] = useState(false);
-    const [targetAge, setTargetAge] = useState('');
+    const [targetGrade, setTargetGrade] = useState('');
     const [learningObjectives, setLearningObjectives] = useState('');
     const [questionTypes, setQuestionTypes] = useState<string[]>(['multiple-choice']);
 
-    const generateQuiz = async () => {
-        setIsGenerating(true);
-        try {
-            const response = await fetch('/api/generatequiz', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    type: 'generateQuiz',
-                    subject,
-                    topic,
-                    numberOfQuestions,
-                    difficulty,
-                    targetAge,
-                    learningObjectives,
-                    questionTypes,
-                }),
-            });
+    // In your AIQuizGenerator component
+const generateQuiz = async () => {
+    setIsGenerating(true);
+    try {
+        const response = await fetch('/api/generatequiz', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                type: 'generateQuiz',
+                subject,
+                topic,
+                numberOfQuestions,
+                difficulty,
+                targetGrade,
+                learningObjectives,
+                questionTypes,
+            }),
+        });
 
-            const data = await response.json();
-            if (data.output) {
-                
-                onQuizGenerated(data.output);
-            } else if (data.error) {
-                console.error('Error generating quiz:', data.error);
-                // Handle the error in the UI, e.g., show an error message to the user
-            }
-        } catch (error) {
-            console.error('Failed to generate quiz:', error);
-            // Handle the error in the UI, e.g., show an error message to the user
-        } finally {
-            setIsGenerating(false);
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to generate quiz');
         }
-    };
+
+        if (data.output) {
+            onQuizGenerated(data.output);
+        } else {
+            throw new Error('No quiz data received');
+        }
+    } catch (error) {
+        console.error('Quiz generation error:', error);
+        // Handle error in UI (e.g., show error message to user)
+        alert(error instanceof Error ? error.message : 'Failed to generate quiz');
+    } finally {
+        setIsGenerating(false);
+    }
+};
 
     return (
         <Card className="w-full max-w-2xl mx-auto flex flex-col h-[calc(100vh-4rem)]">
@@ -100,11 +105,11 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
                             />
                         </div>
                         <div>
-                            <label className="block mb-2">Target Age Group</label>
+                            <label className="block mb-2">Target Grade</label>
                             <Input
-                                value={targetAge}
-                                onChange={(e) => setTargetAge(e.target.value)}
-                                placeholder="e.g., 12-14"
+                                value={targetGrade}
+                                onChange={(e) => setTargetGrade(e.target.value)}
+                                placeholder="e.g., 8"
                             />
                         </div>
                     </div>
